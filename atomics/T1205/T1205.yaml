@@ -14,14 +14,14 @@ atomic_tests:
     knock_protocol:
       description: Protocol for knock - tcp or udp
       type: String
-      default: udp
+      default: "udp"
     knock_port_sequence:
       description: CSV of UDP ports that define a knock
       type: String
-      default: 40000,41000,40000,42000,40000,43000
+      default: "40000,41000,40000,42000,40000,43000"
     listening_port:
       description: Port to start listening on after knock
-      type: String
+      type: Integer
       default: 54321
     max_listen_seconds:
       description: Maximum number of seconds to listen for sequence before stopping and to listen on opened port
@@ -101,18 +101,18 @@ atomic_tests:
     server_ip:
       description: IP of server to knock
       type: String
-      default: 127.0.0.1
+      default: "compromised-host"
     knock_protocol:
       description: Protocol for knock - tcp or udp
       type: String
-      default: udp
+      default: "udp"
     knock_port_sequence:
       description: CSV of UDP ports that define a knock
       type: String
-      default: 40000,41000,40000,42000,40000,43000
+      default: "40000,41000,40000,42000,40000,43000"
     listening_port:
       description: Port the server will listen on after knock
-      type: String
+      type: Integer
       default: 54321
   dependencies:
   - description: |
