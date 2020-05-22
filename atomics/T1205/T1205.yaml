@@ -42,14 +42,14 @@ atomic_tests:
       Install ncat
   executor:
     name: bash
-    elevation_required: true
+    elevation_required: false
     command: |
       TSHARK_FILTER=""
       GREP_PATTERN=""
       if [ "#{knock_protocol}" = "tcp" ] ; then
         PROTOCOL="tcp"
       else
-        PROTOCOL="tcp"
+        PROTOCOL="udp"
       fi
 
       for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
@@ -66,7 +66,7 @@ atomic_tests:
       TSHARK_FILTER="($TSHARK_FILTER) and inbound"
 
       echo -e "Listen for sequence for #{max_listen_seconds} seconds\n"
-      tshark -Q -l -n -f "$TSHARK_FILTER" -T fields -E quote=s -e $PROTOCOL.dstport -a duration:#{max_listen_seconds} > /tmp/t1205_server.dat 2> /dev/null & TSHARK_PID=$!
+      sudo tshark -Q -l -n -f "$TSHARK_FILTER" -T fields -E quote=s -e $PROTOCOL.dstport -a duration:#{max_listen_seconds} > /tmp/t1205_server.dat 2> /dev/null & TSHARK_PID=$!
 
       SEQUENCE_FOUND=false
       COUNTER=0
@@ -77,6 +77,10 @@ atomic_tests:
           SEQUENCE_FOUND=true
           kill $TSHARK_PID
           break
+        fi
+        if (( $COUNTER % 5 == 0 ))
+        then
+            echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
         sleep 1
       done
