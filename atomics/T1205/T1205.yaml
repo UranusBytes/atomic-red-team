@@ -82,7 +82,7 @@ atomic_tests:
             echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
         echo "Counter: $COUNTER"
-        COUNTER=`expr $COUNTER+1`
+        ((COUNTER=COUNTER+1))
         echo "debug2"
         sleep 1s
         echo "debug3"
