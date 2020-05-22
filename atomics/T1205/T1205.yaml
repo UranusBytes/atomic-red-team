@@ -78,10 +78,13 @@ atomic_tests:
           kill $TSHARK_PID
           break
         fi
-        if [[ $(( $COUNTER % 5 )) == 0 ]]; then
+        echo "debug1"
+        if [[ $(( COUNTER % 5 )) == 0 ]]; then
             echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
-        (( COUNTER=COUNTER+1 ))
+        echo "debug2"
+        COUNTER = $(( COUNTER + 1 ))
+        echo "debug3"
         sleep 1
       done
 
