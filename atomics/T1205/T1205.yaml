@@ -79,11 +79,11 @@ atomic_tests:
           break
         fi
         echo "debug1"
-        if [[ $(( COUNTER % 5 )) == 0 ]]; then
+        if [ $(( $COUNTER % 5 )) == 0 ]; then
             echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
         echo "debug2"
-        COUNTER = $(( COUNTER + 1 ))
+        COUNTER = $(( $COUNTER + 1 ))
         echo "debug3"
         sleep 1
       done
