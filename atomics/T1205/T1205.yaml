@@ -69,8 +69,7 @@ atomic_tests:
 
       SEQUENCE_FOUND=0
       COUNTER=0
-      while [ $COUNTER -lt #{max_listen_seconds} ]
-      do
+      while [ $COUNTER -lt #{max_listen_seconds} ] ; do
         grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat 2>&1 /dev/null
         if [ $? -eq 0 ] ; then
           echo -e '\n\nSequence found...'
@@ -82,7 +81,7 @@ atomic_tests:
             echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
         COUNTER=`expr $COUNTER+1`
-        sleep 1
+        sleep 1s
       done
 
       if [ $SEQUENCE_FOUND -eq 1 ] ; then
@@ -140,11 +139,11 @@ atomic_tests:
             echo -e "Knock\n" | ncat -w 1s #{server_ip} $PORT
           fi
           echo "Knock $PORT"
-          sleep 0.5
+          sleep 0.5s
         done
         echo -e "Anyone home?  Knock $LOOP of max 5.\n\n"
 
-        sleep 2
+        sleep 2s
         echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1 | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
         if [ -s /tmp/t1205_client.dat ] ; then
           SHELL_CONTACTED=1
