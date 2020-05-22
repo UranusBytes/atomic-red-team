@@ -89,6 +89,7 @@ atomic_tests:
         echo "Counter: $COUNTER"
       done
 
+      echo "Seq: $SEQUENCE_FOUND"
       if [ $SEQUENCE_FOUND -eq 1 ] ; then
         echo -e 'Start shell server; listen for up to #{max_listen_seconds} seconds\n\n'
         timeout #{max_listen_seconds}s ncat -nlp #{listening_port} -e /bin/sh
