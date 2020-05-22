@@ -54,8 +54,7 @@ atomic_tests:
 
       for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
       do
-        if [ -z "$TSHARK_FILTER" ]
-        then
+        if [ -z "$TSHARK_FILTER" ] ; then
           TSHARK_FILTER="($PROTOCOL dst port $PORT)"
           GREP_PATTERN="'$PORT'"
         else
@@ -68,25 +67,25 @@ atomic_tests:
       echo -e "Listen for sequence for #{max_listen_seconds} seconds\n"
       sudo tshark -Q -l -n -f "$TSHARK_FILTER" -T fields -E quote=s -e $PROTOCOL.dstport -a duration:#{max_listen_seconds} > /tmp/t1205_server.dat 2> /dev/null & TSHARK_PID=$!
 
-      SEQUENCE_FOUND=false
+      SEQUENCE_FOUND=0
       COUNTER=0
       while [ $COUNTER -lt #{max_listen_seconds} ]
       do
-        if grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat; then
+        grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat 2>&1 /dev/null
+        if [ $? -eq 0 ] ; then
           echo -e '\n\nSequence found...'
-          SEQUENCE_FOUND=true
+          SEQUENCE_FOUND=1
           kill $TSHARK_PID
           break
         fi
-        if (( $COUNTER % 5 == 0 ))
-        then
+        if (( $COUNTER % 5 == 0 )) ; then
             echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
         ((COUNTER=COUNTER+1))
         sleep 1
       done
 
-      if [ "$SEQUENCE_FOUND" = true ] ; then
+      if [ $SEQUENCE_FOUND -eq 1 ] ; then
         echo -e 'Start shell server; listen for up to #{max_listen_seconds} seconds\n\n'
         timeout #{max_listen_seconds}s ncat -nlp #{listening_port} -e /bin/sh
       else
