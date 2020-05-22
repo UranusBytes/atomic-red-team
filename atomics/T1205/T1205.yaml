@@ -73,16 +73,16 @@ atomic_tests:
         echo "debug1"
         grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat 2>&1 /dev/null
         if [ $? -eq 0 ] ; then
-          echo -e '\n\nSequence found...'
+          echo -e "\n\nSequence found..."
           SEQUENCE_FOUND=1
           kill $TSHARK_PID
           break
         fi
         if [ $(( $COUNTER % 5 )) -eq 0 ] ; then
-            echo "We have been listening for $COUNTER seconds out of max #{max_listen_seconds} seconds"
+            echo "We have been listening for COUNTER seconds out of max #{max_listen_seconds} seconds"
         fi
         echo "Counter: $COUNTER"
-        ((COUNTER=COUNTER+1))
+        COUNTER=$((COUNTER+1))
         echo "debug2"
         sleep 1s
         echo "debug3"
@@ -91,10 +91,10 @@ atomic_tests:
 
       echo "Seq: $SEQUENCE_FOUND"
       if [ $SEQUENCE_FOUND -eq 1 ] ; then
-        echo -e 'Start shell server; listen for up to #{max_listen_seconds} seconds\n\n'
+        echo -e "Start shell server; listen for up to #{max_listen_seconds} seconds\n\n"
         timeout #{max_listen_seconds}s ncat -nlp #{listening_port} -e /bin/sh
       else
-        echo 'Sequence not heard...'
+        echo "Sequence not heard..."
       fi
     cleanup_command:
       rm -f /tmp/t1205_server.dat
