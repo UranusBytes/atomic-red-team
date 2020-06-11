@@ -47,15 +47,11 @@ atomic_tests:
       /bin/bash --login << 'EOF'
       # Bind shell server for T1205 of Atomic Red Team - https://github.com/redcanaryco/atomic-red-team
 
-      ### Constants
-      #################################################
-      readonly PRINT_DEBUG=1  # Set to 0 for debug messages
-
       ### Functions
       #################################################
       function debug () {
-        if [[ "${PRINT_DEBUG}" -eq 0 ]]; then
-        echo $1 >&2
+        if [[ -f "/tmp/.t1205.debug" ]] ; then
+          echo $1 >&2
         fi
       }
 
@@ -182,14 +178,10 @@ atomic_tests:
       /bin/bash --login << 'EOF'
       # Bind shell client for T1205 of Atomic Red Team - https://github.com/redcanaryco/atomic-red-team
 
-      ### Constants
-      #################################################
-      readonly PRINT_DEBUG=1  # Set to 0 for debug messages
-
       ### Functions
       #################################################
       function debug () {
-        if [[ "${PRINT_DEBUG}" -eq 0 ]] ; then
+        if [[ -f "/tmp/.t1205.debug" ]] ; then
           echo $1 >&2
         fi
       }
