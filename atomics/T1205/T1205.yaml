@@ -219,10 +219,7 @@ atomic_tests:
         local server_ip=$1
         local listening_port=$2
 
-        #echo "echo Shell to host $HOSTNAME as user $USER successful.$(sleep 1)" | ncat ${server_ip} ${listening_port} > /tmp/t1205_client.dat
-        # sleep 3
-        # echo "./shell_server_echo.sh" | ncat ${server_ip} ${listening_port} 1> /tmp/t1205_client.dat 2> /dev/null
-        cat <(echo 'echo Shell to host $HOSTNAME as user $USER successful') <(sleep 1) | nc "10.20.1.102" "54321" 1> /tmp/t1205_client.dat 2> /dev/null
+        cat <(echo 'echo Shell to host $HOSTNAME as user $USER successful') <(sleep 1) | nc "${server_ip}" "${listening_port}" 1> /tmp/t1205_client.dat 2> /dev/null
         if [[ -s /tmp/t1205_client.dat ]] ; then
           debug "Shell was contacted!"
           echo 0
