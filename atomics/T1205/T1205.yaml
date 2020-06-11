@@ -49,6 +49,11 @@ atomic_tests:
 
       ### Functions
       #################################################
+      function startup() {
+        sudo pkill tshar
+        sudo pkill ncat
+      }
+
       function debug () {
         if [[ -f "/tmp/.t1205.debug" ]] ; then
           echo $1 >&2
@@ -102,9 +107,9 @@ atomic_tests:
             echo 0
             return 0
           fi
-        debug "We have been listening for ${counter} seconds out of max ${max_listen_seconds} seconds"
-        (( counter += 1 ))
-        sleep 1s
+          debug "We have been listening for ${counter} seconds out of max ${max_listen_seconds} seconds"
+          (( counter += 1 ))
+          sleep 1s
         done
         echo 1
         return 1
@@ -124,6 +129,8 @@ atomic_tests:
         readonly KNOCK_PORT_SEQUENCE="#{knock_port_sequence}"
         readonly SERVER_LISTENING_PORT="#{server_listening_port}"
         readonly MAX_LISTEN_SECONDS="#{max_listen_seconds}"
+
+        startup
 
         if [[ $(someone_knocked $KNOCK_PROTOCOL $KNOCK_PORT_SEQUENCE $MAX_LISTEN_SECONDS) -eq 0 ]] ; then
           debug "Start shell server; listen for up to ${MAX_LISTEN_SECONDS} seconds."
@@ -180,6 +187,11 @@ atomic_tests:
 
       ### Functions
       #################################################
+      function startup() {
+        sudo pkill tshar
+        sudo pkill ncat
+      }
+
       function debug () {
         if [[ -f "/tmp/.t1205.debug" ]] ; then
           echo $1 >&2
@@ -230,6 +242,8 @@ atomic_tests:
         readonly KNOCK_PROTOCOL="#{knock_protocol}"
         readonly KNOCK_PORT_SEQUENCE="#{knock_port_sequence}"
         readonly SERVER_LISTENING_PORT="#{listening_port}"
+
+        startup
 
         declare SHELL_CONTACTED=0
         for LOOP in {1..5} ; do
