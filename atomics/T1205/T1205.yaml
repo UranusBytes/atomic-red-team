@@ -220,7 +220,7 @@ atomic_tests:
         local listening_port=$2
 
         # cat <(echo 'echo Shell to host $HOSTNAME as user $USER successful' && exit) <(sleep 1) | nc "${server_ip}" "${listening_port}" 1> /tmp/t1205_client.dat 2> /dev/null
-        cat <(echo 'echo Shell to host $HOSTNAME as user $USER successful' && exit) | nc "${server_ip}" "${listening_port}" 1> /tmp/t1205_client.dat 2> /dev/null
+        cat <(echo 'echo Shell to host $HOSTNAME as user $USER at `date` was successful' && exit) | timeout 2s nc "${server_ip}" "${listening_port}" 1> /tmp/t1205_client.dat 2> /dev/null
         if [[ -s /tmp/t1205_client.dat ]] ; then
           debug "Shell was contacted!"
           echo 0
